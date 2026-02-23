@@ -10,6 +10,12 @@ If you're working on linux, use the following command to download full chrome.
 
 `wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb`
 
+### `gym-chrome-dino` updated
+
+Use the following line to install gym library in your environment.
+
+`pip install -e ./bin/gym-chrome-dino`
+
 ## Gymnasium usage
 
 The original documentation includes few bugs. I've listed fixes below.
