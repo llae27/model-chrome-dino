@@ -16,6 +16,13 @@ Use the following line to install gym library in your environment.
 
 `pip install -e ./bin/gym-chrome-dino`
 
+If you can't load the library properly, initialize and update submodules first.
+
+```
+git submodule init
+git submodule update --remote --recursive
+```
+
 ## Gymnasium usage
 
 The original documentation includes few bugs. I've listed fixes below.
