@@ -17,8 +17,11 @@ def main():
     terminated = False
     while not terminated:
         action = env.action_space.sample()
+        # get pixel data
+        frame = env.render()
+        # get game data
         observation, reward, terminated, truncated, info = env.step(action)
-        print(f"{ACTION_MEANING[action]} {reward} / {info}")
+        print(f"{ACTION_MEANING[action]} {reward} / {info}", frame.shape)
     # report
     score = env.unwrapped.get_score()
     print(f"Final score: {score}")
