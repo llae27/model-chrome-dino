@@ -29,6 +29,12 @@ If you're working on Win/Mac, download full chrome via official website. The maj
 
 ### 3. Install `gym-chrome-dino`
 
+Use the following command to install dependencies in your environment.
+
+```
+pip install -r ./bin/gym-chrome-dino/requirements.txt
+```
+
 Use the following line to install gym library in your environment.
 
 ```
