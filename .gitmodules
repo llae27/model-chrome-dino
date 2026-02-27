@@ -1,3 +1,3 @@
 [submodule "bin/gym-chrome-dino"]
 	path = bin/gym-chrome-dino
-	url = git@github.com:llae27/gym-chrome-dino.git
+	url = https://github.com/llae27/model-chrome-dino.git
