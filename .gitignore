@@ -1,3 +1,8 @@
 chromedriver*
 google-chrome*
 dino_env/
+__pycache__/
+*.pth
+*.json
+*.png
+.claude/
