@@ -12,7 +12,7 @@ env.unwrapped.set_acceleration(True)
 obs0 = obs_to_numpy(unwrap_reset(env.reset()))
 H, W, C = obs0.shape
 
-ckpts = sorted(glob.glob("../ddqn_runs/seed_0/ckpt_step_*.pt"),
+ckpts = sorted(glob.glob("ddqn_runs/seed_0/ckpt_step_*.pt"),
                key=lambda p: int(p.split("_")[-1].replace(".pt", "")))
 
 for path in ckpts:
