@@ -12,8 +12,10 @@ env.unwrapped.set_acceleration(True)
 obs0 = obs_to_numpy(unwrap_reset(env.reset()))
 H, W, C = obs0.shape
 
-ckpts = sorted(glob.glob("ddqn_runs/seed_0/ckpt_step_*.pt"),
-               key=lambda p: int(p.split("_")[-1].replace(".pt", "")))
+ckpts = sorted(
+    [os.path.normpath(p) for p in glob.glob("ddqn_runs/seed_0/ckpt_step_*.pt")],
+    key=lambda p: int(p.split("_")[-1].replace(".pt", ""))
+)
 
 for path in ckpts:
     ckpt = torch.load(path, map_location="cpu")
