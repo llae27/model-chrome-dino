@@ -17,6 +17,13 @@ import gymnasium as gym
 import gym_chrome_dino  # registers env id
 from gym_chrome_dino.utils.wrappers import make_dino
 
+def default_device():
+    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
+        return "mps"
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
 
 # ----------------------------
 # Config
@@ -26,11 +33,12 @@ class CFG:
     env_id: str = "ChromeDinoNoBrowser-v0"
 
     seed: int = 42
-    device: str = "cuda" if torch.cuda.is_available() else "cpu"
+    device: str = default_device()
 
     # Rollout collection (single env)
     num_steps: int = 2048
-    total_timesteps: int = 1_000_000
+    # total_timesteps: int = 1_000_000
+    total_timesteps: int = 250_000
 
     # PPO hyperparams
     lr: float = 2.5e-4
@@ -47,28 +55,11 @@ class CFG:
     # Dino wrappers
     timer: bool = True
     frame_stack: bool = True
-    acceleration: bool = False  # start False; later True if you want harder training
+    acceleration: bool = True
 
     # Logging / saving
     log_every_updates: int = 1
     save_path: str = "ppo_dino.pt"
-
-    num_steps = 256
-    total_timesteps = 150_000
-    update_epochs = 2
-    num_minibatches = 1
-
-    lr = 2.5e-4
-    ent_coef = 0.01
-    vf_coef = 0.5
-    clip_coef = 0.2
-    acceleration = True
-
-    # DUMMY
-    num_steps = 256
-    total_timesteps = 4096
-    update_epochs = 1
-    num_minibatches = 1
 
 
 # ----------------------------
@@ -78,7 +69,8 @@ def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def safe_reset(env: gym.Env, seed: int | None = None):
@@ -270,6 +262,8 @@ def train(cfg: CFG):
     set_seed(cfg.seed)
     device = torch.device(cfg.device)
 
+    print(f"Using device: {device}")
+
     env = make_env(cfg)
 
     # Check action space only (obs checker warnings can happen due to wrapper returns; we fix_obs anyway)
@@ -333,6 +327,10 @@ def train(cfg: CFG):
 
             if done:
                 completed_returns.append(ep_return)
+                
+                print(f"[episode finished] step={global_step} score={completed_returns[-1]:.2f} "
+                      f"(episodes={len(completed_returns)})")
+                
                 ep_return = 0.0
                 next_obs, _ = safe_reset(env)
 
