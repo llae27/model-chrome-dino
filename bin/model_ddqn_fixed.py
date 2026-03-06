@@ -32,21 +32,22 @@ class Config:
     # Training length
     total_steps: int = 300_000
     learning_starts: int = 10_000
-    train_every: int = 4
+    train_every: int = 2
+    updates_per_step: int = 1
 
     # RL
     gamma: float = 0.99
     batch_size: int = 32
-    replay_size: int = 100_000
+    replay_size: int = 200_000
 
     # Optim
     lr: float = 1e-4
-    grad_clip: float = 10.0
+    grad_clip: float = 1.0
 
     # Epsilon schedule (linear)
     eps_start: float = 1.0
     eps_end: float = 0.1
-    eps_decay_steps: int = 200_000  # steps to go from start -> end
+    eps_decay_steps: int = 200_000
 
     # Target network
     target_update_every: int = 10_000  # steps
@@ -55,6 +56,22 @@ class Config:
     log_every: int = 2_000
     save_every: int = 50_000
     out_dir: str = "ddqn_runs"
+
+
+@dataclass
+class FastConfig(Config):
+    """Scaled-down config for quick smoke tests (~10-15 min at 6-15 sps).
+    Use this to verify hyperparameter changes before committing to a full run.
+    All ratios are preserved: learning_starts/replay_size, eps_decay/total_steps, etc.
+    """
+    total_steps: int = 12_000
+    learning_starts: int = 1_000
+    replay_size: int = 5_000
+    eps_decay_steps: int = 7_000   # same ratio as 150k/250k
+    target_update_every: int = 250
+    save_every: int = 4_000
+    log_every: int = 200
+    out_dir: str = "ddqn_fast_runs"
 
 
 # ----------------------------
@@ -243,7 +260,9 @@ def train_ddqn(cfg: Config, resume_from: str = None):
     ep_reward = 0.0
     ep_len = 0
     episodes = 0
-    last_ep_reward = 0.0  # reward from the most recently completed episode
+    last_ep_reward = 0.0
+    last_loss = float("nan")
+    last_mean_q = float("nan")
 
     t0 = time.time()
     last_log = start_step - 1
@@ -294,31 +313,34 @@ def train_ddqn(cfg: Config, resume_from: str = None):
             ep_len = 0
 
         # -------- learn --------
-        if step >= cfg.learning_starts and (step % cfg.train_every == 0) and len(rb) >= cfg.batch_size:
-            s, a, r, ns, d = rb.sample(cfg.batch_size)
+        if len(rb) >= cfg.learning_starts and (step % cfg.train_every == 0):
+            for _ in range(cfg.updates_per_step):
+                s, a, r, ns, d = rb.sample(cfg.batch_size)
 
-            s_t = to_torch_obs(s, device)
-            ns_t = to_torch_obs(ns, device)
-            a_t = torch.from_numpy(a).to(device)
-            r_t = torch.from_numpy(r).to(device)
-            d_t = torch.from_numpy(d).to(device)
+                s_t = to_torch_obs(s, device)
+                ns_t = to_torch_obs(ns, device)
+                a_t = torch.from_numpy(a).to(device)
+                r_t = torch.from_numpy(r).to(device)
+                d_t = torch.from_numpy(d).to(device)
 
-            # Q(s,a)
-            q_sa = q(s_t).gather(1, a_t.view(-1, 1)).squeeze(1)
+                # Q(s,a)
+                q_sa = q(s_t).gather(1, a_t.view(-1, 1)).squeeze(1)
 
-            with torch.no_grad():
-                # DDQN: a* = argmax_a Q_online(s',a)
-                next_a = torch.argmax(q(ns_t), dim=1)
-                # Q_target(s', a*)
-                next_q = tgt(ns_t).gather(1, next_a.view(-1, 1)).squeeze(1)
-                target = r_t + (1.0 - d_t) * cfg.gamma * next_q
+                with torch.no_grad():
+                    # DDQN: a* = argmax_a Q_online(s',a)
+                    next_a = torch.argmax(q(ns_t), dim=1)
+                    # Q_target(s', a*)
+                    next_q = tgt(ns_t).gather(1, next_a.view(-1, 1)).squeeze(1)
+                    target = r_t + (1.0 - d_t) * cfg.gamma * next_q
 
-            loss = F.smooth_l1_loss(q_sa, target)
+                loss = F.smooth_l1_loss(q_sa, target)
+                last_loss = loss.item()
+                last_mean_q = q_sa.mean().item()
 
-            opt.zero_grad(set_to_none=True)
-            loss.backward()
-            nn.utils.clip_grad_norm_(q.parameters(), cfg.grad_clip)
-            opt.step()
+                opt.zero_grad(set_to_none=True)
+                loss.backward()
+                nn.utils.clip_grad_norm_(q.parameters(), cfg.grad_clip)
+                opt.step()
 
         # -------- target update --------
         if step % cfg.target_update_every == 0:
@@ -330,7 +352,8 @@ def train_ddqn(cfg: Config, resume_from: str = None):
             steps_per_sec = step / max(1e-6, (time.time() - t0))
             print(
                 f"step={step:7d}  eps={eps:.3f}  replay={len(rb):6d}  "
-                f"episodes={episodes:5d}  ep_r={last_ep_reward:7.1f}  sps={steps_per_sec:7.1f}"
+                f"episodes={episodes:5d}  ep_r={last_ep_reward:7.1f}  "
+                f"loss={last_loss:8.4f}  mean_q={last_mean_q:7.3f}  sps={steps_per_sec:7.1f}"
             )
 
         # -------- save --------
@@ -345,5 +368,8 @@ def train_ddqn(cfg: Config, resume_from: str = None):
 
 
 if __name__ == "__main__":
+    # FastConfig: ~10-15 min smoke test for tuning hyperparameters
+    # Config:     full 300k run (~10+ hours)
+    # cfg = FastConfig()
     cfg = Config()
-    train_ddqn(cfg, resume_from="ddqn_runs/seed_0/ckpt_step_150000.pt")
+    train_ddqn(cfg, resume_from=None)

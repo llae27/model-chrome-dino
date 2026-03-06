@@ -19,7 +19,8 @@ ckpts = sorted(
 
 for path in ckpts:
     ckpt = torch.load(path, map_location="cpu")
-    q = QNet(in_channels=C, n_actions=2, input_hw=(H, W))
+    n_actions = ckpt["q_state_dict"]["head.3.weight"].shape[0]
+    q = QNet(in_channels=C, n_actions=n_actions, input_hw=(H, W))
     q.load_state_dict(ckpt["q_state_dict"])
     q.eval()
 
