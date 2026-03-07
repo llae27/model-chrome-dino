@@ -1,0 +1,3 @@
+Evaluation,Reward (time),Score
+DDQN,51.28,51
+PPO,47.34,45
