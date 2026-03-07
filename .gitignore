@@ -1,6 +1,8 @@
 chromedriver*
 google-chrome*
 dino_env/
+bin/robustness_results
+data
 __pycache__/
 *.pth
 *.json
