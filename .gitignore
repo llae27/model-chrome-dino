@@ -4,3 +4,9 @@ dino_env/
 bin/robustness_results
 data
 __pycache__/
+*.pth
+*.json
+*.png
+ppo_runs/
+ddqn_runs/
+*.log
