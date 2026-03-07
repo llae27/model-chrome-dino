@@ -6,3 +6,6 @@ __pycache__/
 *.json
 *.png
 .claude/
+ppo_runs/
+ddqn_runs/
+*.log
