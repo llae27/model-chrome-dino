@@ -12,7 +12,7 @@ from model_ddqn_fixed import QNet, obs_to_numpy, unwrap_reset, to_torch_obs
 import glob, os
 
 N_EPISODES = 5   # episodes per checkpoint (keep low, each can be long)
-CKPT_DIR   = "ddqn_runs/seed_0"
+CKPT_DIR   = "ddqn_runs_final/seed_0"
 
 env = gym.make("ChromeDinoNoBrowser-v0")
 env = make_dino(env, timer=True, frame_stack=True)
