@@ -10,3 +10,4 @@ __pycache__/
 ppo_runs/
 ddqn_runs/
 *.log
+bin/__pycache__/
