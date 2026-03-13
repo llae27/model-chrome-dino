@@ -1,5 +1,13 @@
 # model-chrome-dino
 
+## Demo!
+
+### Random
+![Random agent](render/random.png)
+
+### Deep Q-Network
+![DQN agent](render/dqn_step_220K.png)
+
 ## Installation
 
 The chrome driver is set to match chrome major version 145.
