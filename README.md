@@ -11,6 +11,9 @@
 ### Deep Q-Network (250K steps)
 ![DQN agent 250K](render/dqn_step_250K.png)
 
+### Double Deep Q-Network (DDQN)
+![DDQN agent](bin/ddqn/ddqn_demo.apng)
+
 ## Installation
 
 The chrome driver is set to match chrome major version 145.
