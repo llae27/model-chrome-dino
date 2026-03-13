@@ -5,8 +5,11 @@
 ### Random
 ![Random agent](render/random.png)
 
-### Deep Q-Network
-![DQN agent](render/dqn_step_220K.png)
+### Deep Q-Network (220K steps)
+![DQN agent 220K](render/dqn_step_220K.png)
+
+### Deep Q-Network (250K steps)
+![DQN agent 250K](render/dqn_step_250K.png)
 
 ## Installation
 
